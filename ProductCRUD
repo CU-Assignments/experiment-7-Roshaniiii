@@ -1,0 +1,73 @@
+import java.sql.*;
+import java.util.Scanner;
+
+class ProductCRUD {
+    public static void main(String[] args) {
+        String url = "jdbc:mysql://localhost:3306/yourDatabase";
+        String user = "Roshaniii";
+        String password = "$@jdgsi7v004";
+        try (Connection conn = DriverManager.getConnection(url, user, password);
+             Scanner scanner = new Scanner(System.in)) {
+            boolean exit = false;
+            while (!exit) {
+                System.out.println("1. Create Product\n2. Read Products\n3. Update Product\n4. Delete Product\n5. Exit");
+                int choice = scanner.nextInt();
+                switch (choice) {
+                    case 1:
+                        System.out.print("Enter Product Name: ");
+                        String name = scanner.next();
+                        System.out.print("Enter Price: ");
+                        double price = scanner.nextDouble();
+                        System.out.print("Enter Quantity: ");
+                        int quantity = scanner.nextInt();
+                        try (PreparedStatement pstmt = conn.prepareStatement("INSERT INTO Product (ProductName, Price, Quantity) VALUES (?, ?, ?)");) {
+                            conn.setAutoCommit(false);
+                            pstmt.setString(1, name);
+                            pstmt.setDouble(2, price);
+                            pstmt.setInt(3, quantity);
+                            pstmt.executeUpdate();
+                            conn.commit();
+                        }
+                        break;
+                    case 2:
+                        try (Statement stmt = conn.createStatement();
+                             ResultSet rs = stmt.executeQuery("SELECT * FROM Product")) {
+                            while (rs.next()) {
+                                System.out.println(rs.getInt("ProductID") + " " + rs.getString("ProductName") + " " + rs.getDouble("Price") + " " + rs.getInt("Quantity"));
+                            }
+                        }
+                        break;
+                    case 3:
+                        System.out.print("Enter ProductID to update: ");
+                        int productId = scanner.nextInt();
+                        System.out.print("Enter new Price: ");
+                        double newPrice = scanner.nextDouble();
+                        try (PreparedStatement pstmt = conn.prepareStatement("UPDATE Product SET Price = ? WHERE ProductID = ?")) {
+                            conn.setAutoCommit(false);
+                            pstmt.setDouble(1, newPrice);
+                            pstmt.setInt(2, productId);
+                            pstmt.executeUpdate();
+                            conn.commit();
+                        }
+                        break;
+                    case 4:
+                        System.out.print("Enter ProductID to delete: ");
+                        int deleteId = scanner.nextInt();
+                        try (PreparedStatement pstmt = conn.prepareStatement("DELETE FROM Product WHERE ProductID = ?")) {
+                            conn.setAutoCommit(false);
+                            pstmt.setInt(1, deleteId);
+                            pstmt.executeUpdate();
+                            conn.commit();
+                        }
+                        break;
+                    case 5:
+                        exit = true;
+                        break;
+                    default:
+                        System.out.println("Invalid choice. Try again.");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
